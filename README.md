@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/adriano97/Adv8.svg?branch=master)](https://travis-ci.org/adrianp97/Adv8)
+[![Build Status](https://travis-ci.org/adrianp97/Adv8.svg?branch=master)](https://travis-ci.org/adrianp97/Adv8)
 
 <svg xmlns="http://www.w3.org/2000/svg" width="99" height="20">
     <linearGradient id="b" x2="0" y2="100%">
