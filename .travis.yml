@@ -1,85 +1,28 @@
-language: python
-go: 1.8.3
-sudo: required
 dist: trusty
-group: edge
+sudo: false
 
-services:
-- rabbitmq
-- docker
-- redis
+language: python
+rvm:
+  - 2.2.2
+cache: bundler
+
+script:
+  - make test
+
+# --file-ignore /lectures/f16/
+# Resolves
+#   ./_site/lectures/f16/week1.html
+#   *  Tag stdio.h invalid (line 78)
+# As the checker doesn't properly ignore textarea contents. Couldn't figure
+# out how to do this finer grained. Need to ignore weeks 1, 3, and 6
 
 env:
   global:
-  - AMQP_URI="amqp://"
-  - GOPATH="$HOME/gopath"
-  - PATH="bin:$HOME/gopath/bin:$HOME/bin:$PATH"
-  - CHECKOUT_ROOT="$HOME/gopath/src/github.com/travis-ci/worker"
-  - GO15VENDOREXPERIMENT='1'
-  - REDIS_URL="redis://"
+    - NOKOGIRI_USE_SYSTEM_LIBRARIES=true # speeds up installation of html-proofer
 
-install: skip
-script: skip
-
-jobs:
-  include:
-  - stage: Build and Test
-    install:
-    - go get -u github.com/alecthomas/gometalinter
-    - gometalinter --install
-    - curl -o ~/bin/shfmt -sSL https://github.com/mvdan/sh/releases/download/v2.0.0/shfmt_v2.0.0_linux_amd64
-    - chmod +x ~/bin/shfmt
-    - shfmt -version
-    script:
-    - make lintall
-    - go get github.com/FiloSottile/gvt
-    - travis_retry make deps
-    - make test
-    - make crossbuild
-    - make smoke
-    addons:
-      artifacts:
-        paths:
-        - ./build/linux/amd64/travis-worker
-        - ./build/darwin/amd64/travis-worker
-        target_paths:
-        - travis-ci/worker/$TRAVIS_BUILD_NUMBER/$TRAVIS_JOB_NUMBER
-        - travis-ci/worker/$(git describe --always --dirty --tags)
-        - travis-ci/worker/$TRAVIS_BRANCH
-  - stage: Job Board Integration Tests
-    install:
-    - go get -u github.com/alecthomas/gometalinter
-    - gometalinter --install
-    - curl -o ~/bin/shfmt -sSL https://github.com/mvdan/sh/releases/download/v2.0.0/shfmt_v2.0.0_linux_amd64
-    - chmod +x ~/bin/shfmt
-    - shfmt -version
-    script:
-    - go get github.com/FiloSottile/gvt
-    - travis_retry make deps
-    - make crossbuild
-    - make http-job-test
-  - stage: Build and Push Docker Image
-    script:
-    - if [[ $TRAVIS_PULL_REQUEST = 'false' && $DOCKER_LOGIN_PASSWORD && $DOCKER_LOGIN_USERNAME ]]; then
-        go get github.com/FiloSottile/gvt;
-        travis_retry make deps;
-        make crossbuild;
-        sudo apt-get update;
-        sudo apt-get -y install docker-ce;
-        make docker-build smoke-docker docker-push;
-      fi
-    - echo "TRAVIS_PULL_REQUEST=${TRAVIS_PULL_REQUEST}"
-    - echo "TRAVIS_BRANCH=${TRAVIS_BRANCH}"
-    - make send-docker-hub-trigger
-  - stage: Build and Test Packages
-    script:
-    - if [[ $TRAVIS_PULL_REQUEST = 'false' && $PACKAGECLOUD_TOKEN ]]; then
-        go get github.com/FiloSottile/gvt;
-        travis_retry make deps;
-        make crossbuild;
-        gem install package_cloud --no-ri --no-rdoc;
-        make package smoke-package;
-      fi
-    notifications:
-      slack:
-        secure: IyWrJhruYYHEIvi4YsN3vV2rycctnRiIolzUMwgiDo275AK6O4h58+fu1EXFjMZmCqdOan98MsF709yW3S9zDaZo2s233dKWzQ95S8+n2RS+pGsxBZacCiEvOh0u1K3f19hpf8zj0ybtpcox+a6yrxK+F3er9WveO39yPZjzwCA=
+notifications:
+  slack:
+    secure: NPl/WIA1wXPBYRz+f8RRfKtX0TM+Mq8gla4q9eOo4g37+GRLKlaDVIQh6IrfaLq6g6+gvTY3vRtvFYU0ZpSQBUK9UQ73PU3NVUNBpUuDI/T7F7m4ktSnVcqax5Itef3jKyi/TQCKCW1/EvujuWW4RfN1j3fZkq0S6/ISF7U847ct13Ou3zHiyZhGEppCJI1g0EFlNuQybo19V+AtGJb1NSX5HRVuiL+A2B4T+I80/eXPrbcfSmLG+y2jbwIrCotmUyZf/WUEZBwZ4JmqCiTvImfZ2yNqaDlZu1UFcvlQA9zD2olZozA8tmfoFcdddOtbtR8/6a6dv7QBj3VJA6+AK8LFHqF/HuHSBLaERo2+OoSyjD6xSB9YrrKV9pQpF6pzhHtkzqDzZj9l0kFh0GNTMgtYzxFmGW3X/MWtaXo6ufxka4P0y7UoaesolnshqJVI/cuyWgGOx/VkhpipQSeMDKg0VeIlWOWrQXXxao+h7vuw08qtgbel7n2pdIx3YNSov/66Lu/Hh9VEIBFXj3DFbkPxYDhsRp/6XieyZbN8PBggNB64UHBTkYkXgf93Wu7O2eRtaH4nFbxnDXsDbXGzItv8/nEqxgvSDDi06QH87BumZi3npEUbIRLfVi/c5/3+ZO6BQzXPfTFi1qQR+5HjPJtYrZm9xRMPcsh441YupnU=
+  email:
+    recipients:
+      - c4cs-staff@umich.edu
