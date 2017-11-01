@@ -8,3 +8,4 @@ cache: bundler
 
 script:
   - make test
+service_name: travis-pro
