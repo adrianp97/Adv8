@@ -6,6 +6,9 @@ rvm:
   - 2.2.2
 cache: bundler
 
+install:
+  pip install coveralls
+
 script:
   - make test
 service_name: travis-pro
