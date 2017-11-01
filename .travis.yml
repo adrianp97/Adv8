@@ -7,7 +7,7 @@ cache: bundler
 
 install:
   - pip install coveralls
-  - pip install jenkins-coverage-badge
+  - npm install -g jenkins-coverage-badge
 
 script:
   - make test
